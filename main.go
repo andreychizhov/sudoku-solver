@@ -9,16 +9,21 @@ import (
 
 type Field [9][9]int
 
-type Point struct {
+type Point struct { // Cell
 	X int
 	Y int
+}
+
+type Area struct {
+	Tl Point
+	Br Point
 }
 
 func main() {
 	var field Field
 	field = Field{}
 
-	data, err := ReadFile("input2.txt")
+	data, err := ReadFile("input.txt")
 	if err != nil {
 		fmt.Print("Error reading from file...")
 		os.Exit(1)
@@ -26,8 +31,68 @@ func main() {
 	field.Fill(data)
 
 	field.Print()
-	fmt.Print(field.Check())
+	fmt.Print(len(GetHints(field)))
 
+}
+
+func (f *Field) Solve() {
+	var subs Point
+
+	hints := GetHints(f)
+
+}
+
+func GetHints(f Field) (map[Point]int) {
+	var hints map[Point]int
+	hints = make(map[Point]int)
+	
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if f[i][j] > 0 {
+				hints[Point{i, j}] = f[i][j]
+			}
+		}
+	}
+	return hints
+}
+
+func (f Field) CanPutIntoCell(x, y, n int) bool {
+	var areas = GetAreas(Point(x, y))
+
+	for _, a := range areas {
+		if ExistsInArea(f, a, n) {
+			return false;
+		}
+	}
+	return true;
+}
+
+func ExistsInArea(f Field, a Area, n int) : bool{
+	for i := a.Tl.X; i <= a.Br.X; i++ {
+		for j := a.Tl.Y; j <= a.Br.Y; j++ {
+			if (f[i, j] == n){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+func GetAreas(p Point) []Area {
+	var areas []Area
+
+	append(areas, Area{Point{p.X, 0}, Point{p.X, 8}})
+	append(areas, Area{Point{0, p.Y}, Point{8, p.Y}})
+
+	for i := 0; i <= 6; i += 3 {
+		for j := 0; j <= 6; j += 3 {
+				if p.X >= i && p.X <= i + 2 && p.Y >= j && p.Y <= j + 2
+				{
+					append(areas, Area{Point{i, j}, Point{i + 2, j + 2}})
+				}
+			}
+		}
+	}
 }
 
 func (f *Field) Check() (bool, Point, int) {
