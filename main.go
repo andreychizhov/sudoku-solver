@@ -9,14 +9,14 @@ import (
 
 type Field [9][9]int
 
-type Point struct { // Cell
+type Cell struct { // Cell
 	X int
 	Y int
 }
 
 type Area struct {
-	Tl Point
-	Br Point
+	Tl Cell
+	Br Cell
 }
 
 func main() {
@@ -31,25 +31,27 @@ func main() {
 	field.Fill(data)
 
 	field.Print()
-	fmt.Print(len(GetHints(field)))
+	fmt.Print(field.CanPutIntoCell(4, 4, 5))
 
 }
 
 func (f *Field) Solve() {
-	var subs Point
+	areas := GetSquares()
 
-	hints := GetHints(f)
+	for _, a := range areas {
+
+	}
 
 }
 
-func GetHints(f Field) (map[Point]int) {
-	var hints map[Point]int
-	hints = make(map[Point]int)
-	
+func GetHints(f Field) map[Cell]int {
+	var hints map[Cell]int
+	hints = make(map[Cell]int)
+
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			if f[i][j] > 0 {
-				hints[Point{i, j}] = f[i][j]
+				hints[Cell{i, j}] = f[i][j]
 			}
 		}
 	}
@@ -57,67 +59,83 @@ func GetHints(f Field) (map[Point]int) {
 }
 
 func (f Field) CanPutIntoCell(x, y, n int) bool {
-	var areas = GetAreas(Point(x, y))
+	if f[x][y] > 0 {
+		return false
+	}
+
+	var areas = GetAreas(Cell{x, y})
 
 	for _, a := range areas {
 		if ExistsInArea(f, a, n) {
-			return false;
+			return false
 		}
 	}
-	return true;
+	return true
 }
 
-func ExistsInArea(f Field, a Area, n int) : bool{
+// Check if number already exists in given area
+func ExistsInArea(f Field, a Area, n int) bool {
 	for i := a.Tl.X; i <= a.Br.X; i++ {
 		for j := a.Tl.Y; j <= a.Br.Y; j++ {
-			if (f[i, j] == n){
-				return true;
+			if f[i][j] == n {
+				return true
 			}
 		}
 	}
-	return false;
+	return false
 }
 
-func GetAreas(p Point) []Area {
+// Get row, column and square that contains given cell
+func GetAreas(p Cell) []Area {
 	var areas []Area
 
-	append(areas, Area{Point{p.X, 0}, Point{p.X, 8}})
-	append(areas, Area{Point{0, p.Y}, Point{8, p.Y}})
+	areas = append(areas, Area{Cell{p.X, 0}, Cell{p.X, 8}})
+	areas = append(areas, Area{Cell{0, p.Y}, Cell{8, p.Y}})
 
 	for i := 0; i <= 6; i += 3 {
 		for j := 0; j <= 6; j += 3 {
-				if p.X >= i && p.X <= i + 2 && p.Y >= j && p.Y <= j + 2
-				{
-					append(areas, Area{Point{i, j}, Point{i + 2, j + 2}})
-				}
+			if p.X >= i && p.X <= i+2 && p.Y >= j && p.Y <= j+2 {
+				areas = append(areas, Area{Cell{i, j}, Cell{i + 2, j + 2}})
 			}
 		}
 	}
+	return areas
 }
 
-func (f *Field) Check() (bool, Point, int) {
+// Get all square areas
+func GetSquares() []Area {
+	areas := make([]Area, 9, 9)
+	for i := 0; i <= 6; i += 3 {
+		for j := 0; j <= 6; j += 3 {
+			areas = append(areas, Area{Cell{i, j}, Cell{i + 2, j + 2}})
+		}
+	}
+	return areas
+}
+
+func (f *Field) Check() (bool, Cell, int) {
 
 	for i := 0; i < 9; i++ {
-		if s := Sum(*f, Point{i, 0}, Point{i, 8}); s != 45 {
-			return false, Point{i, 8}, s
+		if s := Sum(*f, Cell{i, 0}, Cell{i, 8}); s != 45 {
+			return false, Cell{i, 8}, s
 		}
-		if s := Sum(*f, Point{0, i}, Point{8, i}); s != 45 {
-			return false, Point{8, i}, s
+		if s := Sum(*f, Cell{0, i}, Cell{8, i}); s != 45 {
+			return false, Cell{8, i}, s
 		}
 	}
 
 	for i := 0; i <= 6; i += 3 {
 		for j := 0; j <= 6; j += 3 {
-			if s := Sum(*f, Point{i, j}, Point{i + 2, j + 2}); s != 45 {
-				return false, Point{i, j}, s
+			if s := Sum(*f, Cell{i, j}, Cell{i + 2, j + 2}); s != 45 {
+				return false, Cell{i, j}, s
 			}
 		}
 	}
 
-	return true, Point{0, 0}, 45
+	return true, Cell{0, 0}, 45
 }
 
-func Sum(field Field, p1, p2 Point) int {
+func Sum(field Field, p1, p2 Cell) int {
 	sum := 0
 	for i := p1.X; i <= p2.X; i++ {
 		for j := p1.Y; j <= p2.Y; j++ {
