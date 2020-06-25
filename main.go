@@ -31,7 +31,7 @@ func main() {
     field.Fill(data)
 
     field.Print()
-    fmt.Print(field.Solve())
+    field.Solve()
 
 }
 
@@ -39,8 +39,10 @@ func (f *Field) Solve() {
     areas := GetSquares()
 
     for _, a := range areas {
-        v := BuildVector(f, a)
+    	fmt.Println(a)
+        v := BuildVector(*f, a)
         fmt.Print(v)
+        fmt.Println()
     }
 }
 
@@ -56,29 +58,24 @@ func BuildVector(f Field, a Area) map[int][]Cell {
                     if ok {
                         vr[c] = append(ar, Cell{i,j})
                     } else {
-                        vr[c] = []int { Cell{i,j} }
+                        vr[c] = []Cell { Cell{i,j} }
                     }
                 }
             }
         }
     }
+
+    return vr
 }
 
 func GetCandidates(f Field, a Area) []int {
     all := []int { 1,2,3,4,5,6,7,8,9 }
-    hints := make([]int, 0, 9)
     cands := make([]int, 0, 9)
 
-    for i := a.Tl.X; i <= a.Br.X; i++ {
-        for j := a.Tl.Y; j <= a.Br.Y; j++ {
-            if f[i][j] > 0 {
-                hints = append(hints, f[i][j])
-            }
-        }
-    }
+    hints := GetHints(f, a)
 
     for _, n := range all {
-        if (hints.contains(n)) {
+        if (hints[n]) {
             continue
         }
         cands = append(cands, n)
@@ -86,17 +83,16 @@ func GetCandidates(f Field, a Area) []int {
     return cands
 }
 
-func GetHints(f Field) map[Cell]int {
-    var hints map[Cell]int
-    hints = make(map[Cell]int)
+func GetHints(f Field, a Area) map[int]bool {
+    hints := make(map[int]bool)
 
-    for i := 0; i < 9; i++ {
-        for j := 0; j < 9; j++ {
-            if f[i][j] > 0 {
-                hints[Cell{i, j}] = f[i][j]
-            }
-        }
-    }
+	for i := a.Tl.X; i <= a.Br.X; i++ {
+		for j := a.Tl.Y; j <= a.Br.Y; j++ {
+			if f[i][j] > 0 {
+				hints[f[i][j]] = true
+			}
+		}
+	}
     return hints
 }
 
@@ -146,7 +142,7 @@ func GetAreas(p Cell) []Area {
 
 // Get all square areas
 func GetSquares() []Area {
-    areas := make([]Area, 9, 9)
+    areas := make([]Area, 0, 9)
     for i := 0; i <= 6; i += 3 {
         for j := 0; j <= 6; j += 3 {
             areas = append(areas, Area{Cell{i, j}, Cell{i + 2, j + 2}})
