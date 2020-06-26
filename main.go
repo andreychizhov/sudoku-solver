@@ -9,6 +9,8 @@ import (
 
 type Field [9][9]int
 
+type CVector map[int][]Cell
+
 type Cell struct {
     X int
     Y int
@@ -31,22 +33,50 @@ func main() {
     field.Fill(data)
 
     field.Print()
-    field.Solve()
-
+    field.Solve(1)
 }
 
-func (f *Field) Solve() {
+func (f *Field) Solve(step int) {
+    if ok, _, _ := f.Check(); ok {
+        fmt.Printf("Solution found in %d steps!\n", step - 1)
+        return
+    }
+
+    fmt.Printf("Step %d\n", step)
+
     areas := GetSquares()
 
     for _, a := range areas {
-    	fmt.Println(a)
+    	//fmt.Println(a)
         v := BuildVector(*f, a)
-        fmt.Print(v)
-        fmt.Println()
+        f.FillArea(v)
+        //PrintVector(v)
+        //fmt.Println()
+    }
+
+    f.Print()
+    
+    f.Solve(step + 1)
+}
+
+func (f *Field) FillArea(v CVector) {
+    for i:=1; i <= 9; i++ {
+        if arr, ok := v[i]; ok && len(arr) == 1{
+            x, y := arr[0].X, arr[0].Y
+            f[x][y] = i
+        }
     }
 }
 
-func BuildVector(f Field, a Area) map[int][]Cell {
+func PrintVector(vector CVector){
+    for i:=1; i <= 9; i++ {
+        if arr, ok := vector[i]; ok && len(arr) == 1{
+            fmt.Printf("%d: %v; ", i, arr)
+        }
+    }
+}
+
+func BuildVector(f Field, a Area) CVector {
     cands := GetCandidates(f, a)
     vr := make(map[int][]Cell)
 
