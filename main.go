@@ -25,17 +25,17 @@ func main() {
     var field Field
     field = Field{}
 
-    data, err := ReadFile("input2.txt")
+    data, err := ReadFile("input.txt")
     if err != nil {
         fmt.Print("Error reading from file...")
         os.Exit(1)
     }
     field.Fill(data)
     
-    // if err := field.Validate(); err != nil{
-    //     fmt.Println(err)
-    //     os.Exit(1)
-    // }
+    if err := field.Validate(); err != nil{
+        fmt.Println(err)
+        os.Exit(1)
+    }
 
     field.Print()
     field.Solve(1)
@@ -57,9 +57,9 @@ func (f *Field) Solve(step int) {
         v := BuildVector(*f, a)
         s := f.FillArea(v)
         hasSolutions = hasSolutions || s
-        //PrintVector(v)
-        //fmt.Println()
+        PrintVector(v)
     }
+    fmt.Println()
 
     if (!hasSolutions){
         fmt.Println("Sorry, but this sudoku has no singular solution :(")
@@ -174,7 +174,11 @@ func (f Field) Validate() error {
 }
 
 func (f Field) CanPutIntoCell(x, y, n int, allowNonEmpty bool) bool {
-    if !allowNonEmpty && f[x][y] > 0 {
+    if allowNonEmpty {
+        f[x][y] = 0
+    }
+
+    if f[x][y] > 0 {
         return false
     }
 
