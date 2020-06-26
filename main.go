@@ -25,12 +25,17 @@ func main() {
     var field Field
     field = Field{}
 
-    data, err := ReadFile("input.txt")
+    data, err := ReadFile("input2.txt")
     if err != nil {
         fmt.Print("Error reading from file...")
         os.Exit(1)
     }
     field.Fill(data)
+    
+    // if err := field.Validate(); err != nil{
+    //     fmt.Println(err)
+    //     os.Exit(1)
+    // }
 
     field.Print()
     field.Solve(1)
@@ -45,13 +50,20 @@ func (f *Field) Solve(step int) {
     fmt.Printf("Step %d\n", step)
 
     areas := GetSquares()
+    var hasSolutions = false
 
     for _, a := range areas {
     	//fmt.Println(a)
         v := BuildVector(*f, a)
-        f.FillArea(v)
+        s := f.FillArea(v)
+        hasSolutions = hasSolutions || s
         //PrintVector(v)
         //fmt.Println()
+    }
+
+    if (!hasSolutions){
+        fmt.Println("Sorry, but this sudoku has no singular solution :(")
+        return
     }
 
     f.Print()
@@ -59,13 +71,16 @@ func (f *Field) Solve(step int) {
     f.Solve(step + 1)
 }
 
-func (f *Field) FillArea(v CVector) {
+func (f *Field) FillArea(v CVector) bool {
+    var s = false
     for i:=1; i <= 9; i++ {
         if arr, ok := v[i]; ok && len(arr) == 1{
             x, y := arr[0].X, arr[0].Y
             f[x][y] = i
+            s = s || true
         }
     }
+    return s
 }
 
 func PrintVector(vector CVector){
@@ -83,7 +98,7 @@ func BuildVector(f Field, a Area) CVector {
     for _, c := range cands {
         for i := a.Tl.X; i <= a.Br.X; i++ {
             for j := a.Tl.Y; j <= a.Br.Y; j++ {
-                if f.CanPutIntoCell(i, j, c) {
+                if f.CanPutIntoCell(i, j, c, false) {
                     ar, ok := vr[c]
                     if ok {
                         vr[c] = append(ar, Cell{i,j})
@@ -102,7 +117,7 @@ func GetCandidates(f Field, a Area) []int {
     all := []int { 1,2,3,4,5,6,7,8,9 }
     cands := make([]int, 0, 9)
 
-    hints := GetHints(f, a)
+    hints := GetHintsForArea(f, a)
 
     for _, n := range all {
         if (hints[n]) {
@@ -113,7 +128,8 @@ func GetCandidates(f Field, a Area) []int {
     return cands
 }
 
-func GetHints(f Field, a Area) map[int]bool {
+// Hints for area
+func GetHintsForArea(f Field, a Area) map[int]bool {
     hints := make(map[int]bool)
 
 	for i := a.Tl.X; i <= a.Br.X; i++ {
@@ -126,8 +142,39 @@ func GetHints(f Field, a Area) map[int]bool {
     return hints
 }
 
-func (f Field) CanPutIntoCell(x, y, n int) bool {
-    if f[x][y] > 0 {
+// Hints for field
+func GetHints(f Field) (map[Cell]int) {
+    var hints map[Cell]int
+    hints = make(map[Cell]int)
+
+    for i := 0; i < 9; i++ {
+        for j := 0; j < 9; j++ {
+            if f[i][j] > 0 {
+                hints[Cell{i, j}] = f[i][j]
+            }
+        }
+    }
+    return hints
+}
+
+func (f Field) Validate() error {
+    hints := GetHints(f)
+
+    if len(hints) < 17 {
+        return fmt.Errorf("At least %d hints should be placed on sudoku field.", 17)
+    }
+
+    for k, v := range hints {
+        if !f.CanPutIntoCell(k.X, k.Y, v, true) {
+            return fmt.Errorf("Sudoku field has incorrect initial state, cell %v number %d", k, v)
+        }
+    }
+
+    return nil
+}
+
+func (f Field) CanPutIntoCell(x, y, n int, allowNonEmpty bool) bool {
+    if !allowNonEmpty && f[x][y] > 0 {
         return false
     }
 
