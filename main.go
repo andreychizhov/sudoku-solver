@@ -25,7 +25,7 @@ func main() {
     var field Field
     field = Field{}
 
-    data, err := ReadFile("samples/simple/4.txt")
+    data, err := ReadFile("samples/hard/2.txt")
     if err != nil {
         fmt.Print("Error reading from file...")
         os.Exit(1)
