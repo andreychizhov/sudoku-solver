@@ -25,7 +25,7 @@ func main() {
     var field Field
     field = Field{}
 
-    data, err := ReadFile("input.txt")
+    data, err := ReadFile("samples/simple/4.txt")
     if err != nil {
         fmt.Print("Error reading from file...")
         os.Exit(1)
@@ -37,7 +37,11 @@ func main() {
         os.Exit(1)
     }
 
+    fmt.Println("Initial sudoku field")
     field.Print()
+    hints := GetHints(field)
+    fmt.Printf("Field is correct, %d hints found\n\n", len(hints))
+
     field.Solve(1)
 }
 
@@ -62,7 +66,7 @@ func (f *Field) Solve(step int) {
     fmt.Println()
 
     if (!hasSolutions){
-        fmt.Println("Sorry, but this sudoku has no singular solution :(")
+        fmt.Println("Sorry, but this sudoku cannot be solved :(")
         return
     }
 
