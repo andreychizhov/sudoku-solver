@@ -25,7 +25,7 @@ func main() {
 	var field Field
 	field = Field{}
 
-	data, err := ReadFile("samples/hard/2.txt")
+	data, err := ReadFile("samples/simple/8.txt")
 	if err != nil {
 		fmt.Print("Error reading from file...")
 		os.Exit(1)
@@ -45,17 +45,17 @@ func main() {
 	field.Solve(1)
 }
 
-func (f *Field) Solve(step int) {
+func (f *Field) Solve(step int) bool {
 	if ok, _, _ := f.Check(); ok {
 		fmt.Printf("Solution found in %d steps!\n", step-1)
-		return
+		return true
 	}
 
 	fmt.Printf("Step %d\n", step)
 
 	areas := GetSquares()
 	var hasSolutions = false
-	var vectors map[Area]CVector
+	vectors := make(map[Area]CVector)
 
 	for _, a := range areas {
 		//fmt.Println(a)
@@ -68,28 +68,51 @@ func (f *Field) Solve(step int) {
 	fmt.Println()
 
 	if !hasSolutions {
-		// Plan B: trying to resolve ambiguity
+		fmt.Println("Ambiguity found!")
+		// ToDo Plan B: trying to resolve ambiguity
+		for _, a := range areas {
+			v1, ok := vectors[a]
+
+				if ok {
+					for i := 1; i <= 9; i++ {
+						if arr, ok1 := v1[i]; ok1 && len(arr) == 2 {
+							for _, p := range arr {
+								f[p.X][p.Y] = i
+
+								f.Print()
+
+								if f.Solve(step + 1){
+									return true
+								}
+							}
+						}
+					}
+
+			}
+
+		}
+
 
 		fmt.Println("Sorry, but this sudoku cannot be solved :(")
-		return
+		return false
 	}
 
 	f.Print()
 
-	f.Solve(step + 1)
+	return f.Solve(step + 1)
 }
 
-func GetMinimalSolution(vrs map[Area]CVector) (Area, CVector) {
-	for a, v := range vrs {
-		vlen := 0
-		for _, c := range v {
-			if vlen == 0 || len(c) < vlen {
-				vlen = len(c)
-			}
-		}
+// func GetMinimalSolution(vrs map[Area]CVector) (Area, CVector) {
+// 	for a, v := range vrs {
+// 		vlen := 0
+// 		for _, c := range v {
+// 			if vlen == 0 || len(c) < vlen {
+// 				vlen = len(c)
+// 			}
+// 		}
 
-	}
-}
+// 	}
+// }
 
 func (f *Field) FillArea(v CVector) bool {
 	var s = false
@@ -105,7 +128,7 @@ func (f *Field) FillArea(v CVector) bool {
 
 func PrintVector(vector CVector) {
 	for i := 1; i <= 9; i++ {
-		if arr, ok := vector[i]; ok && len(arr) == 1 {
+		if arr, ok := vector[i]; ok && len(arr) <= 2 {
 			fmt.Printf("%d: %v; ", i, arr)
 		}
 	}
