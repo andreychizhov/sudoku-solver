@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	// "time"
 )
 
 type Field [9][9]int
@@ -25,7 +26,7 @@ func main() {
 	var field Field
 	field = Field{}
 
-	data, err := ReadFile("samples/simple/8.txt")
+	data, err := ReadFile("samples/hard/1_step3.txt")
 	if err != nil {
 		fmt.Print("Error reading from file...")
 		os.Exit(1)
@@ -42,10 +43,16 @@ func main() {
 	hints := GetHints(field)
 	fmt.Printf("Field is correct, %d hints found\n\n", len(hints))
 
-	field.Solve(1)
+	sol := field.Solve(1)
+
+	if !sol {
+		fmt.Println("Cannot find solution")
+	}
 }
 
 func (f *Field) Solve(step int) bool {
+	// time.Sleep(time.Second)
+
 	if ok, _, _ := f.Check(); ok {
 		fmt.Printf("Solution found in %d steps!\n", step-1)
 		return true
@@ -60,6 +67,13 @@ func (f *Field) Solve(step int) bool {
 	for _, a := range areas {
 		//fmt.Println(a)
 		v := BuildVector(*f, a)
+
+		if !v.IsValid() {
+			PrintVector(v)
+			fmt.Println("\nIncorrect path in vector")
+			return false
+		}
+
 		vectors[a] = v
 		s := f.FillArea(v)
 		hasSolutions = hasSolutions || s
@@ -71,17 +85,21 @@ func (f *Field) Solve(step int) bool {
 		fmt.Println("Ambiguity found!")
 		// ToDo Plan B: trying to resolve ambiguity
 		for _, a := range areas {
+			newf := *f
 			v1, ok := vectors[a]
 
 				if ok {
 					for i := 1; i <= 9; i++ {
-						if arr, ok1 := v1[i]; ok1 && len(arr) == 2 {
+						newf = *f
+						if arr, ok1 := v1[i]; ok1 && len(arr) <= 3 {
 							for _, p := range arr {
-								f[p.X][p.Y] = i
+								newf = *f
+								fmt.Printf("Setting %d to {%d,%d}\n", i, p.X, p.Y)
+								newf[p.X][p.Y] = i
 
-								f.Print()
+								newf.Print()
 
-								if f.Solve(step + 1){
+								if newf.Solve(step + 1) {
 									return true
 								}
 							}
@@ -102,6 +120,18 @@ func (f *Field) Solve(step int) bool {
 	return f.Solve(step + 1)
 }
 
+func (v CVector) IsValid() bool {
+	for i := 1; i <= 9; i++ {
+
+		for j := 1; j <= 9; j++ {
+			if len(v[i]) == 1 && len(v[j]) == 1 && v[i][0] == v[j][0] && i != j {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // func GetMinimalSolution(vrs map[Area]CVector) (Area, CVector) {
 // 	for a, v := range vrs {
 // 		vlen := 0
@@ -117,6 +147,13 @@ func (f *Field) Solve(step int) bool {
 func (f *Field) FillArea(v CVector) bool {
 	var s = false
 	for i := 1; i <= 9; i++ {
+
+		for j := 1; j <= 9; j++ {
+			if len(v[i]) == 1 && len(v[j]) == 1 && v[i][0] == v[j][0] && i != j {
+				return s
+			}
+		}
+
 		if arr, ok := v[i]; ok && len(arr) == 1 {
 			x, y := arr[0].X, arr[0].Y
 			f[x][y] = i
@@ -128,7 +165,7 @@ func (f *Field) FillArea(v CVector) bool {
 
 func PrintVector(vector CVector) {
 	for i := 1; i <= 9; i++ {
-		if arr, ok := vector[i]; ok && len(arr) <= 2 {
+		if arr, ok := vector[i]; ok {//&& len(arr) <= 2 {
 			fmt.Printf("%d: %v; ", i, arr)
 		}
 	}
