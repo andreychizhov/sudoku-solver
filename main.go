@@ -91,7 +91,7 @@ func (f *Field) Solve(step int) bool {
 				if ok {
 					for i := 1; i <= 9; i++ {
 						newf = *f
-						if arr, ok1 := v1[i]; ok1 && len(arr) <= 3 {
+						if arr, ok1 := v1[i]; ok1 {
 							for _, p := range arr {
 								newf = *f
 								fmt.Printf("Setting %d to {%d,%d}\n", i, p.X, p.Y)
