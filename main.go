@@ -50,11 +50,12 @@ func main() {
 	}
 }
 
-func (f *Field) Solve(step int) bool {
+func (f Field) Solve(step int) bool {
 	// time.Sleep(time.Second)
 
 	if ok, _, _ := f.Check(); ok {
 		fmt.Printf("Solution found in %d steps!\n", step-1)
+		f.Print()
 		return true
 	}
 
@@ -66,7 +67,7 @@ func (f *Field) Solve(step int) bool {
 
 	for _, a := range areas {
 		//fmt.Println(a)
-		v := BuildVector(*f, a)
+		v := BuildVector(f, a)
 
 		if !v.IsValid() {
 			PrintVector(v)
@@ -85,15 +86,14 @@ func (f *Field) Solve(step int) bool {
 		fmt.Println("Ambiguity found!")
 		// ToDo Plan B: trying to resolve ambiguity
 		for _, a := range areas {
-			newf := *f
+			fmt.Println(a)
 			v1, ok := vectors[a]
 
 				if ok {
 					for i := 1; i <= 9; i++ {
-						newf = *f
 						if arr, ok1 := v1[i]; ok1 {
 							for _, p := range arr {
-								newf = *f
+								newf := f
 								fmt.Printf("Setting %d to {%d,%d}\n", i, p.X, p.Y)
 								newf[p.X][p.Y] = i
 
